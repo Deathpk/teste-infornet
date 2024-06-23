@@ -34,5 +34,8 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
-
+    'infornetClient' => [
+        'user' => env('INFORNET_CLIENT_USER'),
+        'password' => env('INFORNET_CLIENT_PASSWORD'),
+    ]
 ];
