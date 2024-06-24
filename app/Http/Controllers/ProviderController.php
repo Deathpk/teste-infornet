@@ -15,7 +15,8 @@ class ProviderController extends Controller
 
     public function search(SearchAvailableProvidersRequest $request, SearchAvailableProvidersService $service)
     {
-        $service->search($request->validated());
+        $providers = $service->search($request->validated());
+        return response()->json(['providers' => $providers]);
     }
 
     public function show()

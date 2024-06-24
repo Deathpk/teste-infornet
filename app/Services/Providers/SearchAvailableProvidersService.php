@@ -9,15 +9,28 @@ use Illuminate\Support\Collection;
 
 class SearchAvailableProvidersService
 {
+    private ResolveProviderServiceDetails $detailsService;
     private array $searchParams;
     private Builder $query;
+    private Collection $providers;
+    private array $providersStatuses;
+    private Collection $result;
 
-    public function search(array $searchParams)
+    public function __construct()
+    {
+        $this->detailsService = new ResolveProviderServiceDetails();
+    }
+
+    public function search(array $searchParams): array
     {
         $this->setParams($searchParams);
         $this->setDefaultProvidersQuery();
-        $this->applyFilterIfPresent();
+        $this->applyFiltersBeforeCheckingProviderStatus();
         $this->fetchProvidersBasedOnParams();
+        $this->applyStatusFilterIfNeeded();
+        $this->detailsService->resolveDetails($this->result);
+        
+        return $this->result->toArray();
     }
 
     private function setParams(array &$searchParams): void
@@ -25,45 +38,63 @@ class SearchAvailableProvidersService
         $this->searchParams = $searchParams;
     }
 
-    public function setDefaultProvidersQuery()
+    public function setDefaultProvidersQuery(): void
     {
         $this->query = Provider::query();
     }
 
-    /**
-     * 1. Fetch the providers, fetch quantity based on result_quantity Param. If not Present, the max Is 100.
-     * 1.a TODO Apply the filters if present.
-     * 2. For each provider, we must check their statuses using the Infornet Service.
-     * 3. Order the results if order_by param present.
-     */
-    private function fetchProvidersBasedOnParams()
+    private function fetchProvidersBasedOnParams(): void
     {
         $maxResults = $this->searchParams['result_quantity'] ?? 100;
-        $providers = $this->query->take($maxResults)->get();
-        $providersIds = $providers->pluck('id')->toArray();
-        $this->getProvidersStatus($providersIds);
+        $this->providers = $this->query->take($maxResults)->get();
+        $this->getProvidersStatuses();
+        $this->resolveProvidersResult();
     }
 
-    private function getProvidersStatus(array $providersIds)
+    private function resolveProvidersResult(): void
     {
+        $statuses = collect($this->providersStatuses['prestadores']);
+
+        $this->result = $this->providers->map(function(Provider $provider) use($statuses) {
+            return [
+                'id' => $provider->id,
+                'name' => $provider->name,
+                'street' => $provider->public_place,
+                'neighborhood' => $provider->neighborhood,
+                'number' => $provider->number,
+                'city' => $provider->city,
+                'uf' => $provider->uf,
+                'status' => strtolower($statuses->firstWhere('idPrestador', $provider->id)['status'])
+            ];
+        });
+    }
+
+    private function getProvidersStatuses(): void
+    {
+        $providersIds = $this->providers->pluck('id')->toArray();
         $client = new FetchProviderStatus($providersIds);
-        $client->handle();
+        $this->providersStatuses = $client->handle();
     }
 
-    private function applyFilterIfPresent(): void
+    private function getFiltersIfPresent(): Collection
     {
-        $hasFilters = isset($this->searchParams['filters']);
-        
-        if(!$hasFilters) {
+        $hasFilter = isset($this->searchParams['filters']);
+
+        if($hasFilter) {
+            return collect($this->searchParams['filters']);
+        }
+
+        return collect();
+    }
+
+    private function applyFiltersBeforeCheckingProviderStatus(): void
+    {        
+        $filters = $this->getFiltersIfPresent();
+
+        if($filters->isEmpty()) {
             return;
         }
 
-        $filters = collect($this->searchParams['filters']);
-        $this->applyFiltersBeforeCheckingProviderStatus($filters);
-    }
-
-    private function applyFiltersBeforeCheckingProviderStatus(Collection &$filters): void
-    {
         //TODO APLICAR STRATEGY
         $filters->each(function (?string $value, string $filter) {
             if(!$value) {
@@ -80,8 +111,16 @@ class SearchAvailableProvidersService
         });
     }
 
-    private function applyFiltersAfterCheckingProviderStatus()
+    private function applyStatusFilterIfNeeded(): void
     {
-        // todo
+        $providerStatus = $this->getFiltersIfPresent()?->get('provider_status');
+
+        if(!$providerStatus) {
+            return;
+        }
+
+        $this->result = $this->result->filter(function(array $result) use(&$providerStatus) {
+            return $result['status'] == $providerStatus;
+        });
     }
 }

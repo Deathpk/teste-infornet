@@ -18,5 +18,5 @@ abstract class BaseRequest
         protected ?string $body
     ){}
 
-    abstract protected function handle(): Response;
+    abstract protected function handle(): array;
 }

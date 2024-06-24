@@ -12,6 +12,6 @@ Route::controller(AuthenticationController::class)->prefix('auth')
 });
 
 Route::controller(ProviderController::class)->prefix('provider')
-->group(function (){
+->group(function () {
     Route::get('/search', 'search');
-});
+})->middleware('auth:api');
