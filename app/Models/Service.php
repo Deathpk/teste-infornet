@@ -8,7 +8,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Service extends Model
 {
+    const SERVICES_PER_PAGE = 10;
     use HasFactory, SoftDeletes;
 
     protected $guarded = [];
+
 }

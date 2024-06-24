@@ -9,17 +9,11 @@ use Illuminate\Support\Collection;
 
 class SearchAvailableProvidersService
 {
-    private ResolveProviderServiceDetails $detailsService;
     private array $searchParams;
     private Builder $query;
     private Collection $providers;
     private array $providersStatuses;
     private Collection $result;
-
-    public function __construct()
-    {
-        $this->detailsService = new ResolveProviderServiceDetails();
-    }
 
     public function search(array $searchParams): array
     {
@@ -28,7 +22,6 @@ class SearchAvailableProvidersService
         $this->applyFiltersBeforeCheckingProviderStatus();
         $this->fetchProvidersBasedOnParams();
         $this->applyStatusFilterIfNeeded();
-        $this->detailsService->resolveDetails($this->result);
         
         return $this->result->toArray();
     }
@@ -46,7 +39,13 @@ class SearchAvailableProvidersService
     private function fetchProvidersBasedOnParams(): void
     {
         $maxResults = $this->searchParams['result_quantity'] ?? 100;
-        $this->providers = $this->query->take($maxResults)->get();
+
+        $this->providers = $this->query
+        ->withWhereHas('services', function ($query) {
+            $query->where('id', $this->searchParams['service_id']);
+        })
+        ->take($maxResults)->get();
+        
         $this->getProvidersStatuses();
         $this->resolveProvidersResult();
     }
@@ -56,6 +55,19 @@ class SearchAvailableProvidersService
         $statuses = collect($this->providersStatuses['prestadores']);
 
         $this->result = $this->providers->map(function(Provider $provider) use($statuses) {
+            // TODO UTILIZAR FACTORY PARA LAT E LON.
+
+            $serviceDetails = (new ResolveProviderServiceDetails())
+            ->handle(
+                providerLat: $provider->lat,
+                providerLon: $provider->long,
+                originLat: $this->searchParams['origin_lat'],
+                originLon: $this->searchParams['origin_long'],
+                destinyLat: $this->searchParams['destiny_lat'],
+                destinyLon: $this->searchParams['destiny_long'],
+                service: $provider->services->first()
+            );
+
             return [
                 'id' => $provider->id,
                 'name' => $provider->name,
@@ -64,7 +76,8 @@ class SearchAvailableProvidersService
                 'number' => $provider->number,
                 'city' => $provider->city,
                 'uf' => $provider->uf,
-                'status' => strtolower($statuses->firstWhere('idPrestador', $provider->id)['status'])
+                'status' => strtolower($statuses->firstWhere('idPrestador', $provider->id)['status']),
+                'serviceDetails' => $serviceDetails
             ];
         });
     }

@@ -19,6 +19,7 @@ return new class extends Migration
             $table->foreignIdFor(ProviderService::class)->constrained();
             $table->integer('departure_km');
             $table->decimal('departure_price', 10, 2);
+            $table->decimal('km_price', 10, 2);
             $table->timestamps();
             $table->softDeletes();
         });
