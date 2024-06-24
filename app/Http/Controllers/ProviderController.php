@@ -8,11 +8,6 @@ use Illuminate\Http\Request;
 
 class ProviderController extends Controller
 {
-    public function index()
-    {
-        
-    }
-
     public function search(SearchAvailableProvidersRequest $request, SearchAvailableProvidersService $service)
     {
         $providers = $service->search($request->validated());
