@@ -26,28 +26,28 @@ class ProviderFactory extends Factory
     { //TODO
         $adressesMock = [
             [
-                'public_place' => 'Rua Dom Rafael',
+                'street' => 'Rua Dom Rafael',
                 'neighborhood' => 'Conjunto Taquaril',
                 'number' => rand(),
                 'city' => 'Belo Horizonte',
                 'uf' => 'MG',
             ],
             [
-                'public_place' => 'Rua R',
+                'street' => 'Rua R',
                 'neighborhood' => 'Mariano de Abreu',
                 'number' => rand(),
                 'city' => 'Belo Horizonte',
                 'uf' => 'MG',
             ],
             [
-                'public_place' => 'Rua Albertino Roque',
+                'street' => 'Rua Albertino Roque',
                 'neighborhood' => 'Iporanga',
                 'number' => rand(),
                 'city' => 'Sete Lagoas',
                 'uf' => 'MG',
             ],
             [
-                'public_place' => 'Rua Antônio Bleme Filho',
+                'street' => 'Rua Antônio Bleme Filho',
                 'neighborhood' => 'Jardim Brasília',
                 'number' => rand(),
                 'city' => 'Betim',
@@ -58,7 +58,7 @@ class ProviderFactory extends Factory
         // $this->faker->locale('pt_BR');
         // return [
         //     'name' => $this->faker->company(),
-        //     'public_place' => 
+        //     'street' => 
         // ];
         return [];
     }

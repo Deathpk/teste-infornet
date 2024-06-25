@@ -14,13 +14,13 @@ return new class extends Migration
         Schema::create('providers', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('public_place');
+            $table->string('street');
             $table->string('neighborhood');
             $table->string('number');
             $table->string('city');
             $table->string('uf');
             $table->string('lat')->nullable();
-            $table->string('long')->nullable();
+            $table->string('lon')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

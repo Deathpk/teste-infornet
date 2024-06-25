@@ -22,6 +22,13 @@ class SearchAvailableProvidersService
         $this->setDefaultProvidersQuery();
         $this->applyFiltersBeforeCheckingProviderStatus();
         $this->fetchProvidersBasedOnParams();
+
+        if ($this->providers->isEmpty()) {
+            return [];
+        }
+
+        $this->getProvidersStatuses();
+        $this->resolveProvidersResult();
         $this->applyStatusFilterIfNeeded();
         
         return $this->result->toArray();
@@ -46,9 +53,6 @@ class SearchAvailableProvidersService
             $query->where('id', $this->searchParams['service_id']);
         })
         ->take($maxResults)->get();
-        
-        $this->getProvidersStatuses();
-        $this->resolveProvidersResult();
     }
 
     private function resolveProvidersResult(): void
@@ -56,38 +60,51 @@ class SearchAvailableProvidersService
         $statuses = collect($this->providersStatuses['prestadores']);
 
         $this->result = $this->providers->map(function(Provider $provider) use($statuses) {
-            $providerCoordinates = new CoordinatesObject(
-                $provider->lat, 
-                $provider->long
-            );
-            $originCoordinates = new CoordinatesObject(
-                $this->searchParams['origin_lat'], 
-                $this->searchParams['origin_long']
-            );
-            $destinyCoordinates = new CoordinatesObject(
-                $this->searchParams['destiny_lat'],
-                $this->searchParams['destiny_long']
-            );
+            $coordinateObjects = $this->getCoordinateObjects($provider);
 
             $serviceDetails = new ResolveProviderServiceDetails(
-                $providerCoordinates, 
-                $originCoordinates, 
-                $destinyCoordinates, 
+                $coordinateObjects['provider'],
+                $coordinateObjects['origin'],
+                $coordinateObjects['destiny'],
                 $provider->services()->first()
             );
+
+            $details = $serviceDetails->handle();
 
             return [
                 'id' => $provider->id,
                 'name' => $provider->name,
-                'street' => $provider->public_place,
+                'street' => $provider->street,
                 'neighborhood' => $provider->neighborhood,
                 'number' => $provider->number,
                 'city' => $provider->city,
                 'uf' => $provider->uf,
                 'status' => strtolower($statuses->firstWhere('idPrestador', $provider->id)['status']),
-                'serviceDetails' => $serviceDetails
+                'serviceDetails' => $details
             ];
         });
+    }
+
+    private function getCoordinateObjects(Provider &$provider): array
+    {
+        $providerCoordinates = new CoordinatesObject(
+            $provider->lat, 
+            $provider->lon
+        );
+        $originCoordinates = new CoordinatesObject(
+            $this->searchParams['origin_lat'], 
+            $this->searchParams['origin_lon']
+        );
+        $destinyCoordinates = new CoordinatesObject(
+            $this->searchParams['destiny_lat'],
+            $this->searchParams['destiny_lon']
+        );
+
+        return [
+            'provider' => $providerCoordinates,
+            'origin' => $originCoordinates,
+            'destiny' => $destinyCoordinates,
+        ];
     }
 
     private function getProvidersStatuses(): void
