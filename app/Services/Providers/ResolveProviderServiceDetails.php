@@ -3,11 +3,17 @@
 namespace App\Services\Providers;
 
 use App\Models\ProviderService;
+use App\Prototypes\CoordinatesObject;
 use Illuminate\Support\Collection;
 
 class ResolveProviderServiceDetails
 {
     const EARTH_RADIUS = 6371;
+
+    private CoordinatesObject $providerCoordinates; 
+    private CoordinatesObject $originCoordinates;
+    private CoordinatesObject $destinyCoordinates;
+    private ProviderService $service;
 
     private float $providerToOriginDistance;
     private float $originToDestinyDistance;
@@ -15,20 +21,23 @@ class ResolveProviderServiceDetails
     private float $totalDistance;
     private float $totalPrice;
 
-    //TODO, APÓS CRIAR AS FACTORIES PARA DISTANCIAS, UTILIZAR O CONSTRUTOR...
-    // public function __construct(CoordinatesFactory $providerCoordinates, CoordinatesFactory $originCoordinates, CoordinatesFactory $destinyCoordinates, ProviderService $service): array
-    // {
-    //     dd($providerLat);
-    // }
-
-    /**
-     * 1. Realizar o calcula da distância entre o provedor até a origem, da origem ao destino, e do destino a origem, e então somar.
-     * 2. Fazer o calculo do valor seguindo a formula recebida.
-     */
-    public function handle(string $providerLat, string $providerLon, string $originLat, string $originLon, string $destinyLat, string $destinyLon, ProviderService $service): array
+    public function __construct(
+        CoordinatesObject $providerCoordinates, 
+        CoordinatesObject $originCoordinates, 
+        CoordinatesObject $destinyCoordinates, 
+        ProviderService $service
+    )
     {
-        $this->resolveDistances($providerLat, $providerLon, $originLat, $originLon, $destinyLat, $destinyLon);
-        $this->resolveTotalPrice($service);
+        $this->providerCoordinates = $providerCoordinates;
+        $this->originCoordinates = $originCoordinates;
+        $this->destinyCoordinates = $destinyCoordinates;
+        $this->service = $service;
+    }
+
+    public function handle(): array
+    {
+        $this->resolveDistances();
+        $this->resolveTotalPrice();
         
         return [
             'totalDistance' => $this->totalDistance,
@@ -36,31 +45,31 @@ class ResolveProviderServiceDetails
         ];
     }
 
-    private function resolveTotalPrice(ProviderService $service): void
+    private function resolveTotalPrice(): void
     {
         $overKm = $this->totalDistance - $this->providerToOriginDistance;
-        $this->totalPrice = $service->departure_price + ($overKm * $service->km_price);
+        $this->totalPrice = $this->service->departure_price + ($overKm * $this->service->km_price);
     }
 
-    private function resolveDistances(string $providerLat, string $providerLon, string $originLat, string $originLon, string $destinyLat, string $destinyLon): void
+    private function resolveDistances(): void
     {
-        $this->providerToOriginDistance = self::harversineFormula($providerLat, $providerLon, $originLat, $originLon);
-        $this->originToDestinyDistance = self::harversineFormula($originLat, $originLon, $destinyLat, $destinyLon);
-        $this->destinyToProviderDistance = self::harversineFormula($destinyLat, $destinyLon, $providerLat, $providerLon);
+        $this->providerToOriginDistance = self::harversineFormula($this->providerCoordinates, $this->originCoordinates);
+        $this->originToDestinyDistance = self::harversineFormula($this->originCoordinates, $this->destinyCoordinates);
+        $this->destinyToProviderDistance = self::harversineFormula($this->destinyCoordinates, $this->providerCoordinates);
         $this->totalDistance = $this->providerToOriginDistance + $this->originToDestinyDistance + $this->destinyToProviderDistance;
     }
 
-    private static function harversineFormula(string $latFrom, string $lonFrom, string $latTo, string $lonTo)
+    private static function harversineFormula(CoordinatesObject $from, CoordinatesObject $to)
     {
-        $latFromToRadius = deg2rad($latFrom);
-        $lonFromToRadius = deg2rad($lonFrom);
-        $latToToRadius = deg2rad($latTo);
-        $lonToToRadius = deg2rad($lonTo);
+        $latFrom = $from->convertLatToRadius();
+        $lonFrom = $from->convertLonToRadius();
+        $latTo = $to->convertLatToRadius();
+        $lonTo = $to->convertLonToRadius();
 
-        $latDelta = $latToToRadius - $latFromToRadius;
-        $lonDelta = $lonToToRadius - $lonFromToRadius;
+        $latDelta = $latTo - $latFrom;
+        $lonDelta = $lonTo - $lonFrom;
 
-        $a = sin($latDelta / 2) * sin($latDelta / 2) + cos($lonFromToRadius) * cos($latToToRadius) * sin($lonDelta / 2) * sin($lonDelta / 2);
+        $a = sin($latDelta / 2) * sin($latDelta / 2) + cos($lonFrom) * cos($latTo) * sin($lonDelta / 2) * sin($lonDelta / 2);
         $c = 2 * atan2(sqrt($a), sqrt(1 -$a));
 
         return round(self::EARTH_RADIUS * $c, 2);

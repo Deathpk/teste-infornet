@@ -25,6 +25,10 @@ class FetchCoordinatesBasedOnAddress extends BaseRequest
             password:config('services.infornetClient.password')
         )->get("$this->baseUrl/$this->endpoint")->json();
         
-        return collect($response)->only(['lat', 'lon'])->toArray();
+        return collect($response)->only([
+            'display_name', 
+            'lat', 
+            'lon'
+        ])->toArray();
     }
 }

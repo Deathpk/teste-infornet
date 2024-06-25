@@ -2,6 +2,7 @@
 
 namespace App\Services\Api\Infornet;
 
+use App\Exceptions\FailedToFetchStatusesAtInfornetApi;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Client\Response;
 
@@ -31,9 +32,7 @@ class FetchProviderStatus extends BaseRequest
             username:config('services.infornetClient.user'),
             password:config('services.infornetClient.password')
         )
-        ->withBody(
-            $this->body
-        )
+        ->withBody($this->body)
         ->get("$this->baseUrl/$this->endpoint")->json();
 
         return $response;

@@ -3,6 +3,7 @@
 namespace App\Services\Providers;
 
 use App\Models\Provider;
+use App\Prototypes\CoordinatesObject;
 use App\Services\Api\Infornet\FetchProviderStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -55,17 +56,24 @@ class SearchAvailableProvidersService
         $statuses = collect($this->providersStatuses['prestadores']);
 
         $this->result = $this->providers->map(function(Provider $provider) use($statuses) {
-            // TODO UTILIZAR FACTORY PARA LAT E LON.
+            $providerCoordinates = new CoordinatesObject(
+                $provider->lat, 
+                $provider->long
+            );
+            $originCoordinates = new CoordinatesObject(
+                $this->searchParams['origin_lat'], 
+                $this->searchParams['origin_long']
+            );
+            $destinyCoordinates = new CoordinatesObject(
+                $this->searchParams['destiny_lat'],
+                $this->searchParams['destiny_long']
+            );
 
-            $serviceDetails = (new ResolveProviderServiceDetails())
-            ->handle(
-                providerLat: $provider->lat,
-                providerLon: $provider->long,
-                originLat: $this->searchParams['origin_lat'],
-                originLon: $this->searchParams['origin_long'],
-                destinyLat: $this->searchParams['destiny_lat'],
-                destinyLon: $this->searchParams['destiny_long'],
-                service: $provider->services->first()
+            $serviceDetails = new ResolveProviderServiceDetails(
+                $providerCoordinates, 
+                $originCoordinates, 
+                $destinyCoordinates, 
+                $provider->services()->first()
             );
 
             return [
@@ -101,19 +109,18 @@ class SearchAvailableProvidersService
     }
 
     private function applyFiltersBeforeCheckingProviderStatus(): void
-    {        
+    { 
         $filters = $this->getFiltersIfPresent();
 
         if($filters->isEmpty()) {
             return;
         }
 
-        //TODO APLICAR STRATEGY
         $filters->each(function (?string $value, string $filter) {
             if(!$value) {
                 return;
             }
-
+            
             if($filter === 'city') {
                 $this->query->where('city', $value);
             }
