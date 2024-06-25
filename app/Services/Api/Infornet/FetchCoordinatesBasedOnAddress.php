@@ -16,20 +16,15 @@ class FetchCoordinatesBasedOnAddress extends BaseRequest
 
     public function handle(): array
     {
-        //TODO RESOLVE HOST ERROR...
-        // $response = Http::withHeaders([
-        //     'Content-Type' => 'application/json',
-        //     'Accept' => 'application/json',
-        // ])
-        // ->withBasicAuth(
-        //     username:config('services.infornetClient.user'),
-        //     password:config('services.infornetClient.password')
-        // )->get("{$this->baseUrl}/{$this->endpoint}");
-        $responseMock = [
-            'lat' => '-19.8195176',
-            'lon' => '-43.9533807'
-        ];
-
-        return $responseMock;
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json',
+        ])
+        ->withBasicAuth(
+            username:config('services.infornetClient.user'),
+            password:config('services.infornetClient.password')
+        )->get("$this->baseUrl/$this->endpoint")->json();
+        
+        return collect($response)->only(['lat', 'lon'])->toArray();
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Requests\Service;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class UpdateService extends FormRequest
 {
@@ -23,7 +24,12 @@ class UpdateService extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'min:3']
+            'name' => [
+                'required', 
+                'string', 
+                'min:3', 
+                Rule::unique('services', 'name')->ignore(request()->service->id)
+            ]
         ];
     }
 
@@ -33,6 +39,7 @@ class UpdateService extends FormRequest
             'name.required' => 'O nome do serviço é obrigatório.',
             'name.string' => 'O nome do serviço deve conter apenas caracteres alfa numéricos.',
             'name.min' => 'O nome do serviço deve conter no mínimo 3 caracteres.',
+            'name.unique' => 'Já existe um serviço com este nome na nossa base de dados.',
         ];
     }
 }

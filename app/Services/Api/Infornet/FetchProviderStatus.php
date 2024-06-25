@@ -23,33 +23,23 @@ class FetchProviderStatus extends BaseRequest
 
     public function handle(): array
     {
-        //TODO RESOLVE WHY IS THE HOST NOT BEIGN RESOLVED...
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json',
+        ])
+        ->withBasicAuth(
+            username:config('services.infornetClient.user'),
+            password:config('services.infornetClient.password')
+        )
+        ->withBody(
+            $this->body
+        )
+        ->get("$this->baseUrl/$this->endpoint")->json();
 
-        // $response = Http::dd()
-        // ->withHeaders([
-        //     'Content-Type' => 'application/json',
-        //     'Accept' => 'application/json',
-        // ])
-        // ->withBasicAuth(
-        //     username:config('services.infornetClient.user'),
-        //     password:config('services.infornetClient.password')
-        // )
-        // ->withBody($this->body)
-        // ->get("{$this->baseUrl}/{$this->endpoint}")->json();
-
-        $responseMock = [
-            'prestadores' => collect($this->providerIds)->map(function(int $id) {
-                return [
-                    'idPrestador' => $id,
-                    'status' => self::getRandomOnlineStatus()
-                ];
-            })->toArray()
-        ];
-
-        return $responseMock;
+        return $response;
     }
 
-    private static function getRandomOnlineStatus(): string
+    public static function getRandomOnlineStatusForTesting(): string
     {
         $availableStatus = ['Online', 'Offline'];
         $randKey = array_rand($availableStatus);

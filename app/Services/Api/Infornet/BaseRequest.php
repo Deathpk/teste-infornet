@@ -11,12 +11,10 @@ abstract class BaseRequest
     const HTTP_POST = 'POST';
     const HTTP_PUT = 'PUT';
 
-    public function __construct(
-        protected string $method,
-        protected string $baseUrl,
-        protected string $endpoint,
-        protected ?string $body
-    ){}
+    protected string $method;
+    protected string $baseUrl;
+    protected string $endpoint;
+    protected ?string $body;
 
     abstract protected function handle(): array;
 }

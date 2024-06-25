@@ -19,6 +19,11 @@ class ProviderController extends Controller
         
     }
 
+    public function update()
+    {
+        
+    }
+
     public function store()
     {
         
