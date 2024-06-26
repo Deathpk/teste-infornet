@@ -27,7 +27,7 @@ class ServiceController extends Controller
         ]);
     }
 
-    public function store(CreateService $request, CreateServiceService $service)
+    public function store(CreateService $request, CreateServiceService $service): JsonResponse
     {
         $service->handle($request->get('name'));
         return response()->json([
@@ -35,7 +35,7 @@ class ServiceController extends Controller
         ], 201);
     }
 
-    public function update(Service $service, UpdateService $request, UpdateServiceService $updateService)
+    public function update(Service $service, UpdateService $request, UpdateServiceService $updateService): JsonResponse
     {
         $updateService->handle($service, $request->get('name'));
         return response()->json([
@@ -43,7 +43,7 @@ class ServiceController extends Controller
         ]);
     }
 
-    public function destroy(Service $service)
+    public function destroy(Service $service): JsonResponse
     {
         $service->delete();
         return response()->json([

@@ -17,7 +17,9 @@ Route::middleware(['auth:api'])->controller(ProviderController::class)->prefix('
 ->group(function () {
     Route::get('/search', 'search');
     Route::get('/{provider}', 'show');
+    Route::post('/', 'store');
     Route::put('/{provider}', 'update');
+    Route::delete('/{provider}', 'destroy');
 });
 
 // TODO REFATORAR PARA CONTROLLER INVOKABLE

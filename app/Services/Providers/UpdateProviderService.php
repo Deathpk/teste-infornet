@@ -4,18 +4,34 @@ namespace App\Services\Providers;
 
 use App\Models\Provider;
 use App\Services\Coordinates\FetchCoordinatesService;
+use App\Services\Coordinates\ResolveCoordinatesService;
 
 class UpdateProviderService
 {
-    private FetchCoordinatesService $coordinateService;
-
-    public function __construct()
-    {
-        $this->coordinateService = new FetchCoordinatesService();
-    }
+    
+    public function __construct(
+        private ResolveCoordinatesService $coordinateService = new ResolveCoordinatesService()
+    ){}
 
     public function handle(Provider $provider, array $data): void
     {
-        dd($data);
+        $addressKeys = ['street', 'neighborhood', 'city', 'uf'];
+        $shouldUpdateCoordinates = collect($data)->hasAny($addressKeys);
+
+        if ($shouldUpdateCoordinates) {
+            $coordinates = $this->coordinateService->resolve(
+                street: $data['street'] ?? $provider->street,
+                neighborhood: $data['neighborhood'] ?? $provider->neighborhood,
+                city: $data['city'] ?? $provider->city,
+            );
+        }
+
+        $provider->update([
+            'street' => $data['street'] ?? $provider->street,
+            'neighborhood' => $data['neighborhood'] ?? $provider->neighborhood,
+            'city' => $data['city'] ?? $provider->city,
+            'lat' => $coordinates['lat'] ?? $provider->lat,
+            'lon' => $coordinates['lon'] ?? $provider->lon,
+        ]);
     }
 }
