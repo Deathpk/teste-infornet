@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Exceptions\FailedToFetchStatusesAtInfornetApi;
 use App\Http\Requests\Providers\CreateProvider;
 use App\Http\Requests\Providers\SearchAvailableProvidersRequest;
 use App\Http\Requests\Providers\UpdateProvider;
@@ -11,7 +10,6 @@ use App\Services\Providers\CreateProviderService;
 use App\Services\Providers\SearchAvailableProvidersService;
 use App\Services\Providers\UpdateProviderService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class ProviderController extends Controller
 {
