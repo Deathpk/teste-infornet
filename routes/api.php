@@ -22,7 +22,6 @@ Route::middleware(['auth:api'])->controller(ProviderController::class)->prefix('
     Route::delete('/{provider}', 'destroy');
 });
 
-// TODO REFATORAR PARA CONTROLLER INVOKABLE
 Route::middleware(['auth:api'])->controller(CoordinatesController::class)->prefix('coordinates')
 ->group(function() {
     Route::get('/', 'fetch');

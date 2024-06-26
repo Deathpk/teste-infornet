@@ -41,7 +41,7 @@ class ResolveProviderServiceDetails
         
         return [
             'totalDistance' => $this->totalDistance,
-            'totalPrice' => $this->totalPrice
+            'totalPrice' => (float) number_format($this->totalPrice, 2)
         ];
     }
 

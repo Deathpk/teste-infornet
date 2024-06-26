@@ -50,7 +50,7 @@ class SearchAvailableProvidersService
 
         $this->providers = $this->query
         ->withWhereHas('services', function ($query) {
-            $query->where('id', $this->searchParams['service_id']);
+            $query->where('provider_service_id', $this->searchParams['service_id']);
         })
         ->take($maxResults)->get();
     }

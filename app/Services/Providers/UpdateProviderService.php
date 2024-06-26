@@ -8,7 +8,6 @@ use App\Services\Coordinates\ResolveCoordinatesService;
 
 class UpdateProviderService
 {
-    
     public function __construct(
         private ResolveCoordinatesService $coordinateService = new ResolveCoordinatesService()
     ){}
@@ -17,7 +16,7 @@ class UpdateProviderService
     {
         $addressKeys = ['street', 'neighborhood', 'city', 'uf'];
         $shouldUpdateCoordinates = collect($data)->hasAny($addressKeys);
-
+        
         if ($shouldUpdateCoordinates) {
             $coordinates = $this->coordinateService->resolve(
                 street: $data['street'] ?? $provider->street,
