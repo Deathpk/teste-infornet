@@ -34,7 +34,7 @@ class FetchProviderStatus extends BaseRequest
         )
         ->withBody($this->body)
         ->get("$this->baseUrl/$this->endpoint");
-
+        
         throw_if($response->failed(), FailedToFetchStatusesAtInfornetApi::class, [
             'details' => $response->json()
         ]);
