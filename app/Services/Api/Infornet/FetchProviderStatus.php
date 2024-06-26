@@ -33,9 +33,13 @@ class FetchProviderStatus extends BaseRequest
             password:config('services.infornetClient.password')
         )
         ->withBody($this->body)
-        ->get("$this->baseUrl/$this->endpoint")->json();
+        ->get("$this->baseUrl/$this->endpoint");
 
-        return $response;
+        throw_if($response->failed(), FailedToFetchStatusesAtInfornetApi::class, [
+            'details' => $response->json()
+        ]);
+
+        return $response->json();
     }
 
     public static function getRandomOnlineStatusForTesting(): string

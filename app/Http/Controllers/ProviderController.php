@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\FailedToFetchStatusesAtInfornetApi;
 use App\Http\Requests\Providers\CreateProvider;
 use App\Http\Requests\Providers\SearchAvailableProvidersRequest;
 use App\Http\Requests\Providers\UpdateProvider;

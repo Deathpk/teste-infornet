@@ -2,6 +2,7 @@
 
 namespace App\Services\Api\Infornet;
 
+use App\Exceptions\Coordinates\FailedToFetchCoordinatesAtInfornetApi;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Client\Response;
 
@@ -23,9 +24,13 @@ class FetchCoordinatesBasedOnAddress extends BaseRequest
         ->withBasicAuth(
             username:config('services.infornetClient.user'),
             password:config('services.infornetClient.password')
-        )->get("$this->baseUrl/$this->endpoint")->json();
+        )->get("$this->baseUrl/$this->endpoint");
         
-        return collect($response)->only([
+        throw_if($response->failed(), FailedToFetchCoordinatesAtInfornetApi::class, [
+            'details' => $response->json()
+        ]);
+
+        return collect($response->json())->only([
             'display_name', 
             'lat', 
             'lon'
